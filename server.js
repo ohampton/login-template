@@ -19,6 +19,7 @@ MongoClient.connect(connectionString,{useUnifiedTopology: true}) .then(client =>
   const quotesCollections = db.collection('UserLogin');
   console.log('connected to database');
 
+  // app.set('view engine', 'ejs')
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -26,11 +27,21 @@ MongoClient.connect(connectionString,{useUnifiedTopology: true}) .then(client =>
 // Add all the CRUD here!
 
   // Get Method
+
   app.get('/', (req, res) => {
-      data = db.collection('userLogin').find().toArray();
-      data.then(result => res.send(result))
-      .catch(error => console.error(error));
+    db.collection('userLogin').find().toArray()
+      .then(results => {
+        res.render('index.ejs', { login : results})
+        console.log(results)
+      })
+      .catch(/* ... */)
+      
   })
+  // app.get('/', (req, res) => {
+  //     data = db.collection('userLogin').find().toArray();
+  //     data.then(result => res.render
+  //     .catch(error => console.error(error));
+  // })
         
   app.get('/login', (req, res) =>{
     data = db.collection('userLogin').find().toArray();
