@@ -56,7 +56,7 @@ MongoClient.connect(connectionString,{useUnifiedTopology: true}) .then(client =>
         username: req.body.name,
         email: req.body.email,
         password: req.body.password,
-        confirmpassword: request.body.confirmpassword
+        confirmPassword: request.body.confirmPassword
       })
       res.redirect('/login')
     } catch {
