@@ -4,7 +4,7 @@ const bodyParser = require('body-parser')
 const passport = require('passport')
 const bcrypt = require('bcrypt');
 const MongoClient = require('mongodb').MongoClient;
-const client = new MongoClient('mongodb://user:pass@localhost');
+const client = new MongoClient('mongodb+srv://Pidge:Greenlion@cluster0.r568t.mongodb.net/test?retryWrites=true&w=majority');
 const { request } = require('express');
 const session = require('express-session');
 const Auth0Strategy = require('passport-auth0');
@@ -74,54 +74,107 @@ MongoClient.connect(connectionString,{useUnifiedTopology: true}) .then(client =>
   app.set('view engine', 'ejs')
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: true }));
-  
-
-  
  
-
-
-// Add all the CRUD here!
-
-  // Get Method For Login Page
-
-  app.get('/',  (req, res) => {
-    console.log('Oscar');
-    res.render('index.ejs', {name: req.user})
-  })
+  //Get User Function
+  function getByEmail(email, callback) {
+   
+    client.connect(function (err) {
+      if (err) return callback(err);
   
-  app.get('/login', (req, res) => {
-    res.render('index.ejs')
-  })
-
-  app.post('/login', passport.authenticate('local', {
-    successRedirect: '/',
-    failureRedirect: '/login',
-    failureFlash: true
-  }))
-
-  app.get('/createAccount',  (req, res) => {
-    res.render('index.ejs')
-  })
+      const db = client.db('db-name');
+      const users = db.collection('users');
   
-  app.post('/createAccount', async (req, res) => {
-    try {
-      const hashedPassword = await bcrypt.hash(req.body.password, 10)
-      users.push({
-        id: Date.now().toString(),
-        username: req.body.name,
-        email: req.body.email,
-        password: req.body.password,
-        confirmPassword: hashedPassword
-      })
-      db.tickets.insertOne({ 
-        title: 'MongoDB insertOne',
-        isbn: '0-7617-6154-3'
+      users.findOne({ email: email }, function (err, user) {
+        client.close();
+  
+        if (err) return callback(err);
+        if (!user) return callback(null, null);
+  
+        return callback(null, {
+          user_id: user._id.toString(),
+          nickname: user.nickname,
+          email: user.email
+        });
+      });
     });
-      res.redirect('/login')
-    } catch {
-      res.redirect('/createAccount')
-    }
-  })
+  }
+  
+  //Create User Function
+  function create(user, callback) {
+   
+    client.connect(function (err) {
+      if (err) return callback(err);
+  
+      const db = client.db('db-name');
+      const users = db.collection('users');
+  
+      users.findOne({ email: user.email }, function (err, withSameMail) {
+        if (err || withSameMail) {
+          client.close();
+          return callback(err || new Error('the user already exists'));
+        }
+  
+        bcrypt.hash(user.password, 10, function (err, hash) {
+          if (err) {
+            client.close();
+            return callback(err);
+          }
+  
+          user.password = hash;
+          users.insert(user, function (err, inserted) {
+            client.close();
+  
+            if (err) return callback(err);
+            callback(null);
+          });
+        });
+      });
+    });
+  }
+
+
+// // Add all the CRUD here!
+
+//   // Get Method For Login Page
+
+//   app.get('/',  (req, res) => {
+//     console.log('Oscar');
+//     res.render('index.ejs', {name: req.user})
+//   })
+  
+//   app.get('/login', (req, res) => {
+//     res.render('index.ejs')
+//   })
+
+//   app.post('/login', passport.authenticate('local', {
+//     successRedirect: '/',
+//     failureRedirect: '/login',
+//     failureFlash: true
+//   }))
+
+//   app.get('/createAccount',  (req, res) => {
+//     res.render('index.ejs')
+//   })
+  
+//   app.post('/createAccount', async (req, res) => {
+//     try {
+//       const hashedPassword = await bcrypt.hash(req.body.password, 10)
+//       users.push({
+//         id: Date.now().toString(),
+//         username: req.body.name,
+//         email: req.body.email,
+//         password: req.body.password,
+//         confirmPassword: hashedPassword
+//       })
+//       db.tickets.insertOne({ 
+//         title: 'MongoDB insertOne',
+//         isbn: '0-7617-6154-3'
+//     });
+//       res.redirect('/login')
+//     } catch {
+//       res.redirect('/createAccount')
+//     }
+//   })
 
 
   // app.get('/', (req, res) => {
