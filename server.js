@@ -2,11 +2,17 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser')
 const passport = require('passport')
+const bcrypt = require('bcrypt');
 const MongoClient = require('mongodb').MongoClient;
+const client = new MongoClient('mongodb://user:pass@localhost');
 const { request } = require('express');
 const session = require('express-session');
 const Auth0Strategy = require('passport-auth0');
 const dotenv = require('dotenv');
+const userInViews = require('./middleware/userInViews');
+const authRouter = require('./route/auth');
+const indexRouter = require('./route/index');
+const  usersRouter = require('./route/users');
 dotenv.config();
 
 connectionString = 'mongodb+srv://Pidge:Greenlion@cluster0.r568t.mongodb.net/test?retryWrites=true&w=majority'
@@ -45,6 +51,10 @@ if (app.get('env') === 'production') {
   app.use(session(sess));
   passport.use(strategy);
   app.use(passport.session());
+  app.use(userInViews());
+  app.use('/', authRouter);
+  app.use('/', indexRouter);
+  app.use('/', usersRouter);  
 
   passport.serializeUser(function (user, done) {
     done(null, user);
@@ -75,6 +85,7 @@ MongoClient.connect(connectionString,{useUnifiedTopology: true}) .then(client =>
   // Get Method For Login Page
 
   app.get('/',  (req, res) => {
+    console.log('Oscar');
     res.render('index.ejs', {name: req.user})
   })
   
@@ -94,19 +105,24 @@ MongoClient.connect(connectionString,{useUnifiedTopology: true}) .then(client =>
   
   app.post('/createAccount', async (req, res) => {
     try {
-      // const hashedPassword = await bcrypt.hash(req.body.password, 10)
+      const hashedPassword = await bcrypt.hash(req.body.password, 10)
       users.push({
         id: Date.now().toString(),
         username: req.body.name,
         email: req.body.email,
         password: req.body.password,
-        confirmPassword: request.body.confirmPassword
+        confirmPassword: hashedPassword
       })
+      db.tickets.insertOne({ 
+        title: 'MongoDB insertOne',
+        isbn: '0-7617-6154-3'
+    });
       res.redirect('/login')
     } catch {
       res.redirect('/createAccount')
     }
   })
+
 
   // app.get('/', (req, res) => {
   //   db.collection('userLogin').find().toArray()
