@@ -67,9 +67,9 @@ if (app.get('env') === 'production') {
 // connection to mongoDB
 MongoClient.connect(connectionString,{useUnifiedTopology: true}) .then(client => {
 
-  const db = client.db('loginTemplate');
-  const quotesCollections = db.collection('UserLogin');
-  console.log('connected to database');
+  // const db = client.db('loginTemplate');
+  // const quotesCollections = db.collection('UserLogin');
+  // console.log('connected to database');
 
   app.set('view engine', 'ejs')
   app.use(bodyParser.json());
